@@ -13,12 +13,12 @@ public class PlayerMovement : MonoBehaviour
 	[SerializeField] int speed;
 	[SerializeField] int jump;
 	[SerializeField] public bool canMove = true;
-	[SerializeField] bool isJumping = false;
+	[SerializeField] public bool isJumping = true;
 
 	public float dist;
 	public DistanceJoint2D dj;
 	float maxDist = 6, defaultDist = 3;
-	public SpringJoint2D sj;
+	[SerializeField] bool isFlying = false;
 	PlayerMovement opponent;
 
     void Awake()
@@ -54,7 +54,6 @@ public class PlayerMovement : MonoBehaviour
         if (Input.GetKeyDown(down) && opponent.canMove)
         {
             canMove = false;
-            //GetComponent<SpriteRenderer>().color = Color.red; // 임시
 			rb.constraints = RigidbodyConstraints2D.FreezePosition;
 			dj.distance = maxDist;
 		}
@@ -62,11 +61,10 @@ public class PlayerMovement : MonoBehaviour
 		if (Input.GetKeyUp(down))
         {
             canMove = true;
-            //GetComponent<SpriteRenderer>().color = Color.white; // 임시
 			if (dist > 4)
 			{
-				sj.frequency = (dist - 3) * .5f;
-				sj.enabled = true;
+				rb2.AddForce((tr.position - tr2.position) * (dist - 1), ForceMode2D.Impulse);
+				isFlying = true;
 			}
 			else
 			{
@@ -76,26 +74,41 @@ public class PlayerMovement : MonoBehaviour
 			}
 		}
 
-		// 거리가 줄보다 길 경우 이동속도 느려짐
-		dist = Vector3.Distance(tr.position, tr2.position);
-		if (dist > 3 && speed == 4)
+		// 거리가 줄보다 길고 멀어질 경우 이동속도 느려짐
+		bool goingFarther = isGoingFarther();
+		if (dist > 3 && speed == 4 && goingFarther)
 			speed = 2;
-		else if (dist <= 3 && speed == 2)
+		else if (speed == 2 && (dist <= 3 || !goingFarther))
 			speed = 4;
 
 		// 차지 후 발사
-		if (sj.enabled && (Mathf.Abs(tr.position.x - tr2.position.x) < .5f || Mathf.Abs(tr.position.y - tr2.position.y) < .5f))
+		if (isFlying && (Mathf.Abs(tr.position.x - tr2.position.x) < .5f && Mathf.Abs(tr.position.y - tr2.position.y) < .5f))
 		{
 			rb.constraints = RigidbodyConstraints2D.None;
 			rb.constraints = RigidbodyConstraints2D.FreezeRotation;
-			rb2.constraints = RigidbodyConstraints2D.None;
-			rb2.constraints = RigidbodyConstraints2D.FreezeRotation;
-			sj.enabled = false;
+			isJumping = true;
+			opponent.isJumping = true;
+			isFlying = false;
 			dj.distance = defaultDist;
 		}
     }
 
-    private void FixedUpdate()
+	bool isGoingFarther()
+	{
+		float distTemp = Vector3.Distance(tr.position, tr2.position);
+		if (distTemp < dist)
+		{
+			dist = distTemp;
+			return false;
+		}
+		else
+		{
+			dist = distTemp;
+			return true;
+		}
+	}
+
+	private void FixedUpdate()
     {
 		// 점프 체크
 		Debug.DrawRay(rb.position, Vector3.down, Color.red);
