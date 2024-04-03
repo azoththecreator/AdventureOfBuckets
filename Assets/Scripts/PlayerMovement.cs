@@ -19,7 +19,7 @@ public class PlayerMovement : MonoBehaviour
 	public DistanceJoint2D dj;
 	float maxDist = 6, defaultDist = 3;
 	[SerializeField] bool isFlying = false;
-	PlayerMovement opponent;
+	public PlayerMovement opponent;
 
     void Awake()
     {

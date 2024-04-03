@@ -41,9 +41,20 @@ public class PlayerManager : MonoBehaviour
 	}
 
 	private void LateUpdate()
-	{
-		// 카메라가 플레이어를 따라감
-		Vector3 targetPos = new Vector3((p1.position.x + p2.position.x) / 2, (p1.position.y + p2.position.y) / 2 + 2, mainCamTr.position.z);
-		mainCamTr.position = targetPos;
+    {
+        // 카메라가 플레이어를 따라감
+        Vector3 targetPos = new Vector3((p1.position.x + p2.position.x) / 2, (p1.position.y + p2.position.y) / 2 + 2, mainCamTr.position.z);
+        
+		// 차지할 때
+        if (playerMovement.dist > 3)
+		{
+			// p1 고정 시 p1에 화면 고정
+			if (playerMovement.canMove == false)
+				targetPos = new Vector3(p1.position.x, p1.position.y + 2, mainCamTr.position.z);
+			else if (playerMovement.opponent.canMove == false)
+                targetPos = new Vector3(p2.position.x, p2.position.y + 2, mainCamTr.position.z);
+        }
+
+        mainCamTr.position = targetPos;
 	}
 }
