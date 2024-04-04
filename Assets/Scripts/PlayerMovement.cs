@@ -21,6 +21,8 @@ public class PlayerMovement : MonoBehaviour
 	[SerializeField] bool isFlying = false;
 	public PlayerMovement opponent;
 
+	public PlayerManager playerManager;
+
     void Awake()
     {
         tr = GetComponent<Transform>();
@@ -29,40 +31,41 @@ public class PlayerMovement : MonoBehaviour
 		opponent = tr2.GetComponent<PlayerMovement>();
     }
 
-    void Update()
-    {
-        if (canMove)
-        {
+	void Update()
+	{
+		if (canMove)
+		{
 			// 좌우 움직임
-            if (Input.GetKey(left))
-                tr.Translate(-speed * Time.deltaTime, 0, 0);
-            if (Input.GetKey(right))
-                tr.Translate(speed * Time.deltaTime, 0, 0);
+			if (Input.GetKey(left))
+				tr.Translate(-speed * Time.deltaTime, 0, 0);
+			if (Input.GetKey(right))
+				tr.Translate(speed * Time.deltaTime, 0, 0);
 
 			// 점프
 			if (Input.GetKeyDown(up))
-            {
-                if (!isJumping)
-                {
-                    rb.AddForce(Vector2.up * jump, ForceMode2D.Impulse);
-                    isJumping = true;
-                }
-            }
+			{
+				if (!isJumping)
+				{
+					rb.AddForce(Vector2.up * jump, ForceMode2D.Impulse);
+					isJumping = true;
+				}
+			}
 		}
 
-        // 고정
-        if (Input.GetKeyDown(down) && opponent.canMove)
-        {
-            canMove = false;
+		// 고정
+		if (Input.GetKeyDown(down) && opponent.canMove)
+		{
+			canMove = false;
 			rb.constraints = RigidbodyConstraints2D.FreezePosition;
 			dj.distance = maxDist;
 		}
 
 		if (Input.GetKeyUp(down))
-        {
-            canMove = true;
+		{
+			canMove = true;
 			if (dist > 4)
 			{
+				rb2.velocity = Vector2.zero;
 				rb2.AddForce((tr.position - tr2.position) * (dist - 1), ForceMode2D.Impulse);
 				isFlying = true;
 			}
@@ -91,6 +94,11 @@ public class PlayerMovement : MonoBehaviour
 			isFlying = false;
 			dj.distance = defaultDist;
 		}
+
+		if (Input.GetKeyDown(KeyCode.R))
+		{
+			playerManager.Respawn();
+		}
     }
 
 	bool isGoingFarther()
@@ -116,5 +124,13 @@ public class PlayerMovement : MonoBehaviour
         if (rayHit.collider != null && rb.velocity.y < 0)
             if (isJumping)
                 isJumping = false;
+	}
+
+	private void OnTriggerEnter2D(Collider2D collision)
+	{
+		if (collision.gameObject.CompareTag("Respawn"))
+		{
+			playerManager.respawnPos = collision.transform.position;
+		}
 	}
 }
