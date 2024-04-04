@@ -12,13 +12,13 @@ public class PlayerMovement : MonoBehaviour
 
 	[SerializeField] int speed;
 	[SerializeField] int jump;
-	[SerializeField] public bool canMove = true;
-	[SerializeField] public bool isJumping = true;
+	public bool isCharging = false;
+	public bool isJumping = true;
 
 	public float dist;
 	public DistanceJoint2D dj;
 	float maxDist = 6, defaultDist = 3;
-	[SerializeField] bool isFlying = false;
+	public bool isFlying = false;
 	public PlayerMovement opponent;
 
 	public PlayerManager playerManager;
@@ -33,7 +33,7 @@ public class PlayerMovement : MonoBehaviour
 
 	void Update()
 	{
-		if (canMove)
+		if (!isCharging)
 		{
 			// 좌우 움직임
 			if (Input.GetKey(left))
@@ -53,16 +53,16 @@ public class PlayerMovement : MonoBehaviour
 		}
 
 		// 고정
-		if (Input.GetKeyDown(down) && opponent.canMove)
+		if (Input.GetKeyDown(down) && !opponent.isCharging && !isFlying && !opponent.isFlying)
 		{
-			canMove = false;
+			isCharging = true;
 			rb.constraints = RigidbodyConstraints2D.FreezePosition;
 			dj.distance = maxDist;
 		}
 
-		if (Input.GetKeyUp(down))
+		if (Input.GetKeyUp(down) && !opponent.isCharging && !isFlying && !opponent.isFlying)
 		{
-			canMove = true;
+			isCharging = false;
 			if (dist > 4)
 			{
 				rb2.velocity = Vector2.zero;
@@ -85,18 +85,18 @@ public class PlayerMovement : MonoBehaviour
 			speed = 4;
 
 		// 차지 후 발사
-		if (isFlying && (Mathf.Abs(tr.position.x - tr2.position.x) < .5f && Mathf.Abs(tr.position.y - tr2.position.y) < .5f))
+		if (isFlying && dj.distance == maxDist)// && (Mathf.Abs(tr.position.x - tr2.position.x) < .5f && Mathf.Abs(tr.position.y - tr2.position.y) < .5f))
 		{
 			rb.constraints = RigidbodyConstraints2D.None;
 			rb.constraints = RigidbodyConstraints2D.FreezeRotation;
 			isJumping = true;
 			opponent.isJumping = true;
-			isFlying = false;
 			dj.distance = defaultDist;
 		}
 
 		if (Input.GetKeyDown(KeyCode.R))
 		{
+			rb.velocity = Vector2.zero;
 			playerManager.Respawn();
 		}
     }
@@ -120,10 +120,16 @@ public class PlayerMovement : MonoBehaviour
     {
 		// 점프 체크
 		Debug.DrawRay(rb.position, Vector3.down, Color.red);
-        RaycastHit2D rayHit = Physics2D.Raycast(rb.position, Vector3.down, 1, LayerMask.GetMask("Terrain"));
-        if (rayHit.collider != null && rb.velocity.y < 0)
-            if (isJumping)
-                isJumping = false;
+        RaycastHit2D rayHit = Physics2D.Raycast(rb.position, Vector3.down, 1.5f, LayerMask.GetMask("Terrain"));
+		if (rayHit.collider != null && rb.velocity.y < 0)
+		{
+			if (isJumping)
+				isJumping = false;
+			if (isFlying)
+				isFlying = false;
+			if (opponent.isFlying)
+				opponent.isFlying = false;
+		}
 	}
 
 	private void OnTriggerEnter2D(Collider2D collision)

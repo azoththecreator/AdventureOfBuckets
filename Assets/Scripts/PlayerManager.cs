@@ -11,7 +11,6 @@ public class PlayerManager : MonoBehaviour
 	float defaultSize = 7;
 
 	public Transform p1, p2;
-	Rigidbody2D rb1, rb2;
 	PlayerMovement playerMovement;
 
 	public Transform spring;
@@ -24,9 +23,6 @@ public class PlayerManager : MonoBehaviour
     {
 		mainCamTr = mainCam.transform;
 		playerMovement = p1.GetComponent<PlayerMovement>();
-
-		rb1 = p1.GetComponent<Rigidbody2D>();
-		rb2 = p2.GetComponent<Rigidbody2D>();
 	}
 
 	private void Update()
@@ -56,9 +52,9 @@ public class PlayerManager : MonoBehaviour
         Vector3 targetPos = new Vector3((p1.position.x + p2.position.x) / 2, (p1.position.y + p2.position.y) / 2 + offsetY, mainCamTr.position.z);
         
 		// 차지할 때
-		if (!playerMovement.canMove)
+		if (playerMovement.isCharging)
 			targetPos = new Vector3(p1.position.x, p1.position.y, mainCamTr.position.z);
-		else if (!playerMovement.opponent.canMove)
+		else if (playerMovement.opponent.isCharging)
 			targetPos = new Vector3(p2.position.x, p2.position.y, mainCamTr.position.z);
 
 		mainCamTr.Translate((targetPos - mainCamTr.position) * camSpeed * Time.deltaTime);
@@ -66,8 +62,6 @@ public class PlayerManager : MonoBehaviour
 
 	public void Respawn()
 	{
-		rb1.velocity = Vector2.zero;
-		rb2.velocity = Vector2.zero;
 		p1.transform.position = new Vector3(respawnPos.x - .5f, respawnPos.y + 3, 0);
 		p2.transform.position = new Vector3(respawnPos.x + .5f, respawnPos.y + 3, 0);
 	}
