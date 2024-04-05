@@ -45,10 +45,7 @@ public class PlayerMovement : MonoBehaviour
 			if (Input.GetKeyDown(up))
 			{
 				if (!isJumping)
-				{
 					rb.AddForce(Vector2.up * jump, ForceMode2D.Impulse);
-					isJumping = true;
-				}
 			}
 		}
 
@@ -117,12 +114,17 @@ public class PlayerMovement : MonoBehaviour
 		}
 	}
 
-	private void FixedUpdate()
-    {
-		// 점프 체크
-		Debug.DrawRay(rb.position, Vector3.down, Color.red);
-        RaycastHit2D rayHit = Physics2D.Raycast(rb.position, Vector3.down, 1.2f, LayerMask.GetMask("Terrain"));
-		if (rayHit.collider != null && rb.velocity.y < 0)
+	private void OnTriggerEnter2D(Collider2D collision)
+	{
+		if (collision.CompareTag("Respawn"))
+		{
+			playerManager.respawnPos = collision.transform.position;
+		}
+	}
+
+	private void OnTriggerStay2D(Collider2D collision)
+	{
+		if (collision.CompareTag("Terrain"))
 		{
 			if (isJumping)
 				isJumping = false;
@@ -133,11 +135,9 @@ public class PlayerMovement : MonoBehaviour
 		}
 	}
 
-	private void OnTriggerEnter2D(Collider2D collision)
+	private void OnTriggerExit2D(Collider2D collision)
 	{
-		if (collision.gameObject.CompareTag("Respawn"))
-		{
-			playerManager.respawnPos = collision.transform.position;
-		}
+		if (collision.CompareTag("Terrain"))
+			isJumping = true;
 	}
 }
