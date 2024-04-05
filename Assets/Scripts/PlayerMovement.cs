@@ -96,6 +96,7 @@ public class PlayerMovement : MonoBehaviour
 
 		if (Input.GetKeyDown(KeyCode.R))
 		{
+			isJumping = true;
 			rb.velocity = Vector2.zero;
 			playerManager.Respawn();
 		}
@@ -120,7 +121,7 @@ public class PlayerMovement : MonoBehaviour
     {
 		// 점프 체크
 		Debug.DrawRay(rb.position, Vector3.down, Color.red);
-        RaycastHit2D rayHit = Physics2D.Raycast(rb.position, Vector3.down, 1.5f, LayerMask.GetMask("Terrain"));
+        RaycastHit2D rayHit = Physics2D.Raycast(rb.position, Vector3.down, 1.2f, LayerMask.GetMask("Terrain"));
 		if (rayHit.collider != null && rb.velocity.y < 0)
 		{
 			if (isJumping)
