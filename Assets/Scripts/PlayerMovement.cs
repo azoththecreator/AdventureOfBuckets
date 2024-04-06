@@ -33,69 +33,72 @@ public class PlayerMovement : MonoBehaviour
 
 	void Update()
 	{
-		if (!isCharging)
+		if (playerManager.isFollowing)
 		{
-			// 좌우 움직임
-			if (Input.GetKey(left))
-				tr.Translate(-speed * Time.deltaTime, 0, 0);
-			if (Input.GetKey(right))
-				tr.Translate(speed * Time.deltaTime, 0, 0);
-
-			// 점프
-			if (Input.GetKeyDown(up))
+			if (!isCharging)
 			{
-				if (!isJumping)
-					rb.AddForce(Vector2.up * jump, ForceMode2D.Impulse);
+				// 좌우 움직임
+				if (Input.GetKey(left))
+					tr.Translate(-speed * Time.deltaTime, 0, 0);
+				if (Input.GetKey(right))
+					tr.Translate(speed * Time.deltaTime, 0, 0);
+
+				// 점프
+				if (Input.GetKeyDown(up))
+				{
+					if (!isJumping)
+						rb.AddForce(Vector2.up * jump, ForceMode2D.Impulse);
+				}
 			}
-		}
 
-		// 고정
-		if (Input.GetKeyDown(down) && !opponent.isCharging && !isFlying && !opponent.isFlying)
-		{
-			isCharging = true;
-			rb.constraints = RigidbodyConstraints2D.FreezePosition;
-			dj.distance = maxDist;
-		}
-
-		if (Input.GetKeyUp(down) && !opponent.isCharging && !isFlying && !opponent.isFlying)
-		{
-			isCharging = false;
-			if (dist > 4)
+			// 고정
+			if (Input.GetKeyDown(down) && !opponent.isCharging && !isFlying && !opponent.isFlying)
 			{
-				rb2.velocity = Vector2.zero;
-				rb2.AddForce((tr.position - tr2.position) * (dist - 1), ForceMode2D.Impulse);
-				isFlying = true;
+				isCharging = true;
+				rb.constraints = RigidbodyConstraints2D.FreezePosition;
+				dj.distance = maxDist;
 			}
-			else
+
+			if (Input.GetKeyUp(down) && !opponent.isCharging && !isFlying && !opponent.isFlying)
+			{
+				isCharging = false;
+				if (dist > 4)
+				{
+					rb2.velocity = Vector2.zero;
+					rb2.AddForce((tr.position - tr2.position) * (dist - 1), ForceMode2D.Impulse);
+					isFlying = true;
+				}
+				else
+				{
+					rb.constraints = RigidbodyConstraints2D.None;
+					rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+					dj.distance = defaultDist;
+				}
+			}
+
+			// 거리가 줄보다 길고 멀어질 경우 이동속도 느려짐
+			bool goingFarther = isGoingFarther();
+			if (dist > 3 && speed == 4 && goingFarther)
+				speed = 2;
+			else if (speed == 2 && (dist <= 3 || !goingFarther))
+				speed = 4;
+
+			// 차지 후 발사
+			if (isFlying && dj.distance == maxDist)// && (Mathf.Abs(tr.position.x - tr2.position.x) < .5f && Mathf.Abs(tr.position.y - tr2.position.y) < .5f))
 			{
 				rb.constraints = RigidbodyConstraints2D.None;
 				rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+				isJumping = true;
+				opponent.isJumping = true;
 				dj.distance = defaultDist;
 			}
-		}
 
-		// 거리가 줄보다 길고 멀어질 경우 이동속도 느려짐
-		bool goingFarther = isGoingFarther();
-		if (dist > 3 && speed == 4 && goingFarther)
-			speed = 2;
-		else if (speed == 2 && (dist <= 3 || !goingFarther))
-			speed = 4;
-
-		// 차지 후 발사
-		if (isFlying && dj.distance == maxDist)// && (Mathf.Abs(tr.position.x - tr2.position.x) < .5f && Mathf.Abs(tr.position.y - tr2.position.y) < .5f))
-		{
-			rb.constraints = RigidbodyConstraints2D.None;
-			rb.constraints = RigidbodyConstraints2D.FreezeRotation;
-			isJumping = true;
-			opponent.isJumping = true;
-			dj.distance = defaultDist;
-		}
-
-		if (Input.GetKeyDown(KeyCode.R))
-		{
-			isJumping = true;
-			rb.velocity = Vector2.zero;
-			playerManager.Respawn();
+			if (Input.GetKeyDown(KeyCode.R))
+			{
+				isJumping = true;
+				rb.velocity = Vector2.zero;
+				playerManager.Respawn();
+			}
 		}
     }
 

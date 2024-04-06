@@ -9,6 +9,7 @@ public class PlayerManager : MonoBehaviour
 	float offsetY = 1;
 	float camSpeed = 5;
 	float defaultSize = 7;
+	public bool isFollowing = true;
 
 	public Transform p1, p2;
 	PlayerMovement playerMovement;
@@ -37,6 +38,13 @@ public class PlayerManager : MonoBehaviour
 
 		for (int i = 0; i < springSprites.Length; i++)
 			springSprites[i].transform.position = new Vector3(p1.position.x * i / (springSprites.Length - 1) + p2.position.x * (springSprites.Length - 1 - i) / (springSprites.Length - 1), p1.position.y * i / (springSprites.Length - 1) + p2.position.y * (springSprites.Length - 1 - i) / (springSprites.Length - 1), 1);
+
+
+		// 테스트용
+		if (Input.GetKeyDown(KeyCode.Space))
+		{
+			respawnPos = p1.position;
+		}
 	}
 
 	private void FixedUpdate()
@@ -48,16 +56,19 @@ public class PlayerManager : MonoBehaviour
 
 	private void LateUpdate()
     {
-        // 카메라가 플레이어를 따라감
-        Vector3 targetPos = new Vector3((p1.position.x + p2.position.x) / 2, (p1.position.y + p2.position.y) / 2 + offsetY, mainCamTr.position.z);
-        
-		// 차지할 때
-		if (playerMovement.isCharging)
-			targetPos = new Vector3(p1.position.x, p1.position.y, mainCamTr.position.z);
-		else if (playerMovement.opponent.isCharging)
-			targetPos = new Vector3(p2.position.x, p2.position.y, mainCamTr.position.z);
+		if (isFollowing)
+		{
+			// 카메라가 플레이어를 따라감
+			Vector3 targetPos = new Vector3((p1.position.x + p2.position.x) / 2, (p1.position.y + p2.position.y) / 2 + offsetY, mainCamTr.position.z);
 
-		mainCamTr.Translate((targetPos - mainCamTr.position) * camSpeed * Time.deltaTime);
+			// 차지할 때
+			if (playerMovement.isCharging)
+				targetPos = new Vector3(p1.position.x, p1.position.y, mainCamTr.position.z);
+			else if (playerMovement.opponent.isCharging)
+				targetPos = new Vector3(p2.position.x, p2.position.y, mainCamTr.position.z);
+
+			mainCamTr.Translate((targetPos - mainCamTr.position) * camSpeed * Time.deltaTime);
+		}
 	}
 
 	public void Respawn()
