@@ -23,6 +23,8 @@ public class PlayerMovement : MonoBehaviour
 
 	public PlayerManager playerManager;
 
+	public bool quicksand = false;
+
     void Awake()
     {
         tr = GetComponent<Transform>();
@@ -37,17 +39,34 @@ public class PlayerMovement : MonoBehaviour
 		{
 			if (!isCharging)
 			{
-				// 좌우 움직임
-				if (Input.GetKey(left))
-					tr.Translate(-speed * Time.deltaTime, 0, 0);
-				if (Input.GetKey(right))
-					tr.Translate(speed * Time.deltaTime, 0, 0);
-
-				// 점프
-				if (Input.GetKeyDown(up))
+				if (quicksand)
 				{
-					if (!isJumping)
-						rb.AddForce(Vector2.up * jump, ForceMode2D.Impulse);
+					if (Input.GetKey(left))
+						tr.Translate(-speed * .5f * Time.deltaTime, 0, 0);
+					if (Input.GetKey(right))
+						tr.Translate(speed * .5f * Time.deltaTime, 0, 0);
+
+					// 점프
+					if (Input.GetKeyDown(up))
+					{
+						if (!isJumping)
+							rb.AddForce(Vector2.up * jump * .5f, ForceMode2D.Impulse);
+					}
+				}
+				else
+				{
+					// 좌우 움직임
+					if (Input.GetKey(left))
+						tr.Translate(-speed * Time.deltaTime, 0, 0);
+					if (Input.GetKey(right))
+						tr.Translate(speed * Time.deltaTime, 0, 0);
+
+					// 점프
+					if (Input.GetKeyDown(up))
+					{
+						if (!isJumping)
+							rb.AddForce(Vector2.up * jump, ForceMode2D.Impulse);
+					}
 				}
 			}
 
@@ -72,6 +91,7 @@ public class PlayerMovement : MonoBehaviour
 				{
 					rb.constraints = RigidbodyConstraints2D.None;
 					rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+					tr.rotation = Quaternion.identity;
 					dj.distance = defaultDist;
 				}
 			}
@@ -142,5 +162,18 @@ public class PlayerMovement : MonoBehaviour
 	{
 		if (collision.CompareTag("Terrain"))
 			isJumping = true;
+	}
+
+	public void SuperJump(float strength)
+	{
+		rb.velocity = Vector3.zero;
+		rb2.velocity = Vector3.zero;
+		rb.AddForce(Vector2.up * strength, ForceMode2D.Impulse);
+		rb2.AddForce(Vector2.up * strength, ForceMode2D.Impulse);
+
+		if (isFlying)
+			isFlying = false;
+		if (opponent.isFlying)
+			opponent.isFlying = false;
 	}
 }
