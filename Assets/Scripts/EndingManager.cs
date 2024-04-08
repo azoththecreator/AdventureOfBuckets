@@ -26,9 +26,6 @@ public class EndingManager : MonoBehaviour
 
 	private void Update()
 	{
-		if (Input.GetKeyDown(KeyCode.Escape))
-			Ending();
-
 		if (p2.position.x >= 119.2f && p2.localScale.x == 1)
 		{
 			StartCoroutine(EndingCutscene());

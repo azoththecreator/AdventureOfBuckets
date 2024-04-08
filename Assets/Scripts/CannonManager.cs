@@ -9,6 +9,7 @@ public class CannonManager : MonoBehaviour
 	public float shootDelay;
 	public float shootStrength;
 	public GameObject bomb;
+
 	public enum direction
 	{
 		UP,
@@ -18,6 +19,7 @@ public class CannonManager : MonoBehaviour
 	}
 	public direction dir;
 	AudioSource audioSource;
+	float vol = .2f;
 
 	private void Start()
 	{
@@ -62,4 +64,14 @@ public class CannonManager : MonoBehaviour
 				break;
 		}
 	}
+
+    private void OnBecameVisible()
+    {
+		audioSource.volume = vol;
+    }
+
+    private void OnBecameInvisible()
+    {
+		audioSource.volume = 0;
+    }
 }

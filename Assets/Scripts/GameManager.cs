@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
 using UnityEngine.SceneManagement;
+using TMPro;
+using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
@@ -11,7 +13,12 @@ public class GameManager : MonoBehaviour
 	public Transform mainCam;
 	public PlayerManager playerManager;
 
-	AudioSource audioSource;
+	bool escTimerStart = false;
+	[SerializeField] float escTimer = 0;
+	public TextMeshProUGUI escText;
+	public Image escTextImage;
+
+    AudioSource audioSource;
 
 	private void Start()
 	{
@@ -19,9 +26,41 @@ public class GameManager : MonoBehaviour
 
 		Time.timeScale = 0;
 		StartCoroutine(FadeIn());
-	}
+    }
 
-	IEnumerator FadeIn()
+    void Update()
+    {
+		if (Input.GetKeyDown(KeyCode.Escape))
+		{
+			if (escTimerStart)
+            {
+				escText.gameObject.SetActive(false);
+				escTextImage.gameObject.SetActive(false);
+                StartCoroutine(FadeOut("Scenes/Menu"));
+			}
+			else
+            {
+                escTimerStart = true;
+				escText.DOColor(new Color(1, 1, 1, 1), .5f);
+				escTextImage.DOColor(new Color(56 / 255f, 56 / 255f, 56 / 255f, 210 / 255f), .5f);
+            }
+		}
+
+		if (escTimerStart)
+		{
+            escTimer += Time.deltaTime;
+
+			if (escTimer > 3)
+            {
+                escText.DOColor(new Color(1, 1, 1, 0), .5f);
+                escTextImage.DOColor(new Color(56 / 255f, 56 / 255f, 56 / 255f, 0), .5f);
+                escTimer = 0;
+                escTimerStart = false;
+            }
+        }
+    }
+
+    IEnumerator FadeIn()
 	{
 		yield return new WaitForSecondsRealtime(1);
 		for (int i = 0; i <= 16; i++)

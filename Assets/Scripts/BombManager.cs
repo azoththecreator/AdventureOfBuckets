@@ -8,7 +8,9 @@ public class BombManager : MonoBehaviour
 	bool isEnabled = false;
 	public float explosion;
 	SpriteRenderer sr;
+
 	AudioSource audioSource;
+	float vol = 1;
 
 	private void Start()
 	{
@@ -47,4 +49,14 @@ public class BombManager : MonoBehaviour
 			}
 		}
 	}
+
+    private void OnBecameVisible()
+    {
+		audioSource.volume = vol;
+    }
+
+    private void OnBecameInvisible()
+    {
+        audioSource.volume = 0;
+    }
 }
