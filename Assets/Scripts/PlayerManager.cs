@@ -10,6 +10,7 @@ public class PlayerManager : MonoBehaviour
 	float camSpeed = 5;
 	float defaultSize = 7;
 	public bool isFollowing = true;
+	public bool isEnding = false;
 
 	public Transform p1, p2;
 	PlayerMovement playerMovement;
@@ -18,7 +19,7 @@ public class PlayerManager : MonoBehaviour
 	float radToDeg = 57.2958f;
 	public SpriteRenderer[] springSprites;
 
-	public Vector2 respawnPos;
+	public Vector3 respawnPos;
 
 	void Awake()
     {
@@ -41,16 +42,16 @@ public class PlayerManager : MonoBehaviour
 
 
 		// 테스트용
-		if (Input.GetKeyDown(KeyCode.Space))
-		{
-			respawnPos = p1.position;
-		}
+		//if (Input.GetKeyDown(KeyCode.Space))
+		//{
+		//	respawnPos = p1.position;
+		//}
 	}
 
 	private void FixedUpdate()
 	{
 		// 차지할 때 줌아웃
-		if (playerMovement.dist > 3)
+		if (playerMovement.dist > 3 && !isEnding)
 			mainCam.orthographicSize = defaultSize + (playerMovement.dist - 3);
 	}
 
@@ -73,7 +74,12 @@ public class PlayerManager : MonoBehaviour
 
 	public void Respawn()
 	{
+		p1.GetComponent<PlayerMovement>().isJumping = true;
+		p2.GetComponent<PlayerMovement>().isJumping = true;
+		p1.GetComponent<Rigidbody2D>().velocity = Vector2.zero;
+		p2.GetComponent<Rigidbody2D>().velocity = Vector2.zero;
 		p1.transform.position = new Vector3(respawnPos.x - .5f, respawnPos.y + 3, 0);
 		p2.transform.position = new Vector3(respawnPos.x + .5f, respawnPos.y + 3, 0);
+		mainCam.orthographicSize = 7;
 	}
 }

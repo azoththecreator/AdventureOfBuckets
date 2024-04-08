@@ -1,3 +1,4 @@
+using DG.Tweening;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -10,10 +11,18 @@ public class PlayerMovement : MonoBehaviour
 	public Rigidbody2D rb2;
     public KeyCode left, right, up, down;
 
+	[SerializeField] SpriteRenderer spriteRenderer;
+	[SerializeField] Sprite defaultSprite, chargeSprite;
+	[SerializeField] ParticleSystem splash;
+
 	[SerializeField] int speed;
 	[SerializeField] int jump;
 	public bool isCharging = false;
 	public bool isJumping = true;
+
+	AudioSource audioSource;
+	public AudioClip fxLand, fxJump;
+	public AudioSource springAudioSource;
 
 	public float dist;
 	public DistanceJoint2D dj;
@@ -25,99 +34,130 @@ public class PlayerMovement : MonoBehaviour
 
 	public bool quicksand = false;
 
+	public bool isEnding = false;
+
     void Awake()
     {
         tr = GetComponent<Transform>();
         rb = GetComponent<Rigidbody2D>();
 
 		opponent = tr2.GetComponent<PlayerMovement>();
+
+		audioSource = GetComponent<AudioSource>();
     }
 
 	void Update()
 	{
-		if (playerManager.isFollowing)
+		if (!isEnding)
 		{
-			if (!isCharging)
+			if (playerManager.isFollowing)
 			{
-				if (quicksand)
+				if (!isCharging)
 				{
-					if (Input.GetKey(left))
-						tr.Translate(-speed * .5f * Time.deltaTime, 0, 0);
-					if (Input.GetKey(right))
-						tr.Translate(speed * .5f * Time.deltaTime, 0, 0);
-
-					// 점프
-					if (Input.GetKeyDown(up))
+					if (quicksand)
 					{
-						if (!isJumping)
-							rb.AddForce(Vector2.up * jump * .5f, ForceMode2D.Impulse);
+						if (Input.GetKey(left))
+						{
+							tr.Translate(-speed * .5f * Time.deltaTime, 0, 0);
+							if (tr.localScale.x == 1)
+								tr.DOScaleX(-1, 0);
+						}
+						if (Input.GetKey(right))
+						{
+							tr.Translate(speed * .5f * Time.deltaTime, 0, 0);
+							if (tr.localScale.x == -1)
+								tr.DOScaleX(1, 0);
+						}
+
+						if (Input.GetKeyDown(up))
+						{
+							if (!isJumping)
+							{
+								audioSource.clip = fxJump;
+								audioSource.Play();
+								rb.AddForce(Vector2.up * jump * .5f, ForceMode2D.Impulse);
+							}
+						}
+					}
+					else
+					{
+						// 좌우 움직임
+						if (Input.GetKey(left))
+						{
+							tr.Translate(-speed * Time.deltaTime, 0, 0);
+							if (tr.localScale.x == 1)
+								tr.DOScaleX(-1, 0);
+						}
+						if (Input.GetKey(right))
+						{
+							tr.Translate(speed * Time.deltaTime, 0, 0);
+							if (tr.localScale.x == -1)
+								tr.DOScaleX(1, 0);
+						}
+
+						// 점프
+						if (Input.GetKeyDown(up))
+						{
+							if (!isJumping)
+							{
+								audioSource.clip = fxJump;
+								audioSource.Play();
+								rb.AddForce(Vector2.up * jump, ForceMode2D.Impulse);
+							}
+						}
 					}
 				}
-				else
-				{
-					// 좌우 움직임
-					if (Input.GetKey(left))
-						tr.Translate(-speed * Time.deltaTime, 0, 0);
-					if (Input.GetKey(right))
-						tr.Translate(speed * Time.deltaTime, 0, 0);
 
-					// 점프
-					if (Input.GetKeyDown(up))
+				// 고정
+				if (Input.GetKeyDown(down) && !opponent.isCharging && !isFlying && !opponent.isFlying)
+				{
+					isCharging = true;
+					rb.constraints = RigidbodyConstraints2D.FreezeAll;
+					dj.distance = maxDist;
+					spriteRenderer.sprite = chargeSprite;
+				}
+
+				if (Input.GetKeyUp(down) && !opponent.isCharging && !isFlying && !opponent.isFlying)
+				{
+					isCharging = false;
+					spriteRenderer.sprite = defaultSprite;
+					if (dist > 4)
 					{
-						if (!isJumping)
-							rb.AddForce(Vector2.up * jump, ForceMode2D.Impulse);
+						rb2.velocity = Vector2.zero;
+						rb2.AddForce((tr.position - tr2.position) * (dist - 1), ForceMode2D.Impulse);
+						isFlying = true;
+						springAudioSource.Play();
+					}
+					else
+					{
+						rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+						tr.rotation = Quaternion.Euler(Vector3.zero);
+						dj.distance = defaultDist;
+						isFlying = true;
 					}
 				}
-			}
 
-			// 고정
-			if (Input.GetKeyDown(down) && !opponent.isCharging && !isFlying && !opponent.isFlying)
-			{
-				isCharging = true;
-				rb.constraints = RigidbodyConstraints2D.FreezePosition;
-				dj.distance = maxDist;
-			}
+				// 거리가 줄보다 길고 멀어질 경우 이동속도 느려짐
+				bool goingFarther = isGoingFarther();
+				if (dist > 3 && speed == 4 && goingFarther)
+					speed = 2;
+				else if (speed == 2 && (dist <= 3 || !goingFarther))
+					speed = 4;
 
-			if (Input.GetKeyUp(down) && !opponent.isCharging && !isFlying && !opponent.isFlying)
-			{
-				isCharging = false;
-				if (dist > 4)
+				// 차지 후 발사
+				if (isFlying && dj.distance == maxDist)
 				{
-					rb2.velocity = Vector2.zero;
-					rb2.AddForce((tr.position - tr2.position) * (dist - 1), ForceMode2D.Impulse);
-					isFlying = true;
-				}
-				else
-				{
-					rb.constraints = RigidbodyConstraints2D.None;
 					rb.constraints = RigidbodyConstraints2D.FreezeRotation;
-					tr.rotation = Quaternion.identity;
+					tr.rotation = Quaternion.Euler(Vector3.zero);
+					isJumping = true;
+					opponent.isJumping = true;
 					dj.distance = defaultDist;
 				}
-			}
 
-			// 거리가 줄보다 길고 멀어질 경우 이동속도 느려짐
-			bool goingFarther = isGoingFarther();
-			if (dist > 3 && speed == 4 && goingFarther)
-				speed = 2;
-			else if (speed == 2 && (dist <= 3 || !goingFarther))
-				speed = 4;
-
-			// 차지 후 발사
-			if (isFlying && dj.distance == maxDist)// && (Mathf.Abs(tr.position.x - tr2.position.x) < .5f && Mathf.Abs(tr.position.y - tr2.position.y) < .5f))
-			{
-				rb.constraints = RigidbodyConstraints2D.None;
-				rb.constraints = RigidbodyConstraints2D.FreezeRotation;
-				isJumping = true;
-				opponent.isJumping = true;
-				dj.distance = defaultDist;
-			}
-
-			if (Input.GetKeyDown(KeyCode.R))
-			{
-				isJumping = true;
-				rb.velocity = Vector2.zero;
-				playerManager.Respawn();
+				if (Input.GetKeyDown(KeyCode.R))
+				{
+					playerManager.Respawn();
+				}
 			}
 		}
     }
@@ -141,6 +181,7 @@ public class PlayerMovement : MonoBehaviour
 	{
 		if (collision.CompareTag("Respawn"))
 		{
+			collision.GetComponent<CheckpointManager>().Save(playerManager.respawnPos);
 			playerManager.respawnPos = collision.transform.position;
 		}
 	}
@@ -150,7 +191,12 @@ public class PlayerMovement : MonoBehaviour
 		if (collision.CompareTag("Terrain"))
 		{
 			if (isJumping)
+			{
 				isJumping = false;
+				audioSource.clip = fxLand;
+				audioSource.Play();
+				splash.Play();
+			}
 			if (isFlying)
 				isFlying = false;
 			if (opponent.isFlying)

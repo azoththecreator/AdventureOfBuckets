@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
+using DG.Tweening;
 
 public class MenuManager : MonoBehaviour
 {
@@ -12,6 +13,8 @@ public class MenuManager : MonoBehaviour
     public GameObject screen_StageSelect;
 
     bool userIsFool = false;
+
+	public RectTransform fadeOut;
 
     void ExitGame()
     {
@@ -32,8 +35,8 @@ public class MenuManager : MonoBehaviour
 
     public void OnClickStartButton()
 	{
-        // 스테이지 1 시작
-        SceneManager.LoadScene("Scenes/Stage1");
+		// 스테이지 1 시작
+		StartCoroutine(FadeOut("Scenes/Stage1"));
     }
 
     public void OnClickExitButton()
@@ -74,22 +77,22 @@ public class MenuManager : MonoBehaviour
 
     public void OnClickStage1Button()
     {
-        SceneManager.LoadScene("Scenes/Stage1");
+        StartCoroutine(FadeOut("Scenes/Stage1"));
     }
 
     public void OnClickStage2Button()
     {
-        SceneManager.LoadScene("Scenes/Stage2");
+        StartCoroutine(FadeOut("Scenes/Stage2"));
     }
 
     public void OnClickStage3Button()
     {
-        SceneManager.LoadScene("Scenes/Stage3");
+        StartCoroutine(FadeOut("Scenes/Stage3"));
     }
 
     public void OnClickStage4Button()
     {
-        SceneManager.LoadScene("Scenes/Stage4");
+        StartCoroutine(FadeOut("Scenes/Stage4"));
     }
 
     public void OnClickCloseButton()
@@ -99,4 +102,16 @@ public class MenuManager : MonoBehaviour
         //input field 초기화
         inputField.text = string.Empty;
     }
+
+	IEnumerator FadeOut(string stage)
+	{
+		for (int i = 0; i <= 16; i++)
+		{
+			fadeOut.DOLocalMoveX(128, 0).SetRelative();
+			yield return new WaitForSeconds(.05f);
+		}
+		yield return new WaitForSeconds(.5f);
+
+		SceneManager.LoadScene(stage);
+	}
 }

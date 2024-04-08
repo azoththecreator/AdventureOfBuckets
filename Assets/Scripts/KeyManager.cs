@@ -6,10 +6,12 @@ public class KeyManager : MonoBehaviour
 {
 	GameManager gameManager;
 	public Animator lockAnim;
+	AudioSource audioSource;
 
 	private void Start()
 	{
 		gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
+		audioSource = GetComponent<AudioSource>();
 	}
 
 	private void OnTriggerEnter2D(Collider2D collision)
@@ -17,6 +19,7 @@ public class KeyManager : MonoBehaviour
 		if (collision.CompareTag("Player"))
 		{
 			gameManager.Unlock(gameObject, lockAnim);
+			audioSource.Play();
 		}
 	}
 }

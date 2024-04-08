@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -10,8 +11,12 @@ public class GameManager : MonoBehaviour
 	public Transform mainCam;
 	public PlayerManager playerManager;
 
+	AudioSource audioSource;
+
 	private void Start()
 	{
+		audioSource = GetComponent<AudioSource>();
+
 		Time.timeScale = 0;
 		StartCoroutine(FadeIn());
 	}
@@ -27,12 +32,12 @@ public class GameManager : MonoBehaviour
 		Time.timeScale = 1;
 	}
 
-	public void StageClear()
+	public void StageClear(string stage)
 	{
-		StartCoroutine(FadeOut());
+		StartCoroutine(FadeOut(stage));
 	}
 
-	IEnumerator FadeOut()
+	IEnumerator FadeOut(string stage)
 	{
 		for (int i = 0; i <= 16; i++)
 		{
@@ -40,7 +45,8 @@ public class GameManager : MonoBehaviour
 			yield return new WaitForSeconds(.05f);
 		}
 		yield return new WaitForSeconds(.5f);
-		Debug.Log("next stage");
+
+		SceneManager.LoadScene(stage);
 	}
 
 	public void Unlock(GameObject key, Animator lockAnim)
@@ -58,6 +64,7 @@ public class GameManager : MonoBehaviour
 		yield return new WaitForSecondsRealtime(1.5f);
 		key.SetActive(false);
 		lockAnim.SetBool("unlock", true);
+		audioSource.Play();
 		yield return new WaitForSecondsRealtime(2);
 		mainCam.DOMove(prevPos, 1).SetUpdate(true);
 		yield return new WaitForSecondsRealtime(1);

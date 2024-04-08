@@ -6,13 +6,14 @@ public class GoalManager : MonoBehaviour
 {
 	public GameManager gameManager;
 	bool check = true;
+	public string nextStage;
 
 	private void OnTriggerEnter2D(Collider2D collision)
 	{
 		if (collision.CompareTag("Player") && check == true)
 		{
 			check = false;
-			gameManager.StageClear();
+			gameManager.StageClear(nextStage);
 		}
 	}
 }
