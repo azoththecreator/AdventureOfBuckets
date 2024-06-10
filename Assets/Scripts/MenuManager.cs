@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -8,33 +9,40 @@ using DG.Tweening;
 
 public class MenuManager : MonoBehaviour
 {
-    public TMP_InputField inputField;
-    public GameObject screen_Help;
-    public GameObject screen_StageSelect;
+    // public TMP_InputField inputField;
+    // public GameObject screen_Help;
+    // public GameObject screen_StageSelect;
+    //
+    // bool userIsFool = false;
+    // bool screenOn = false;
 
-    bool userIsFool = false;
-    bool screenOn = false;
-
+    BoolManager boolManager;
+    
     public RectTransform fadeOut;
 	public RectTransform fadeIn;
 
-    bool escTimerStart = false;
-    [SerializeField] float escTimer = 0;
-    public TextMeshProUGUI escText;
-    public Image escTextImage;
+	[SerializeField] GameObject flower;
 
-    void ExitGame()
-    {
-#if UNITY_EDITOR
-        UnityEditor.EditorApplication.isPlaying = false;
-#else
-        Application.Quit();
-#endif
-    }
+	[SerializeField] GameObject skipOn, skipOff;
+	[SerializeField] TMP_InputField cowardInput;
+
+    // bool escTimerStart = false;
+    // [SerializeField] float escTimer = 0;
+    // public TextMeshProUGUI escText;
+    // public Image escTextImage;
 
     private void Start()
     {
+	    boolManager = GameObject.Find("BoolManager").GetComponent<BoolManager>();
+	    if (boolManager.isFinished)
+		    flower.SetActive(true);
+	    if (boolManager.isCoward)
+	    {
+		    skipOn.SetActive(true);
+		    skipOff.SetActive(false);
+	    }
         StartCoroutine(FadeIn());
+        
     }
 
     IEnumerator FadeIn()
@@ -51,112 +59,130 @@ public class MenuManager : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            if (screenOn)
-            {
-                screenOn = false;
-                OnClickCloseButton();
-            }
-            else if (escTimerStart)
-            {
-                escText.gameObject.SetActive(false);
-                escTextImage.gameObject.SetActive(false);
-                ExitGame();
-            }
-            else
-            {
-                escTimerStart = true;
-                escText.DOColor(new Color(1, 1, 1, 1), .5f);
-                escTextImage.DOColor(new Color(56 / 255f, 56 / 255f, 56 / 255f, 210 / 255f), .5f);
-            }
-        }
-
-        if (escTimerStart)
-        {
-            escTimer += Time.deltaTime;
-
-            if (escTimer > 3)
-            {
-                escText.DOColor(new Color(1, 1, 1, 0), .5f);
-                escTextImage.DOColor(new Color(56 / 255f, 56 / 255f, 56 / 255f, 0), .5f);
-                escTimer = 0;
-                escTimerStart = false;
-            }
-        }
+	    if (Input.GetKeyDown(KeyCode.Return))
+	    {
+		    if (cowardInput.text.ToLower() == "i really suck at this game.")
+		    {
+			    cowardInput.text = "";
+			    skipOff.SetActive(false);
+			    skipOn.SetActive(true);
+			    boolManager.isCoward = true;
+		    }
+	    }
     }
 
-    public void OnClickStartButton()
+    //    void Update()
+ //    {
+ //        if (Input.GetKeyDown(KeyCode.Escape))
+ //        {
+ //            if (screenOn)
+ //            {
+ //                screenOn = false;
+ //                OnClickCloseButton();
+ //            }
+ //            else if (escTimerStart)
+ //            {
+ //                escText.gameObject.SetActive(false);
+ //                escTextImage.gameObject.SetActive(false);
+ //                ExitGame();
+ //            }
+ //            else
+ //            {
+ //                escTimerStart = true;
+ //                escText.DOColor(new Color(1, 1, 1, 1), .5f);
+ //                escTextImage.DOColor(new Color(56 / 255f, 56 / 255f, 56 / 255f, 210 / 255f), .5f);
+ //            }
+ //        }
+ //
+ //        if (escTimerStart)
+ //        {
+ //            escTimer += Time.deltaTime;
+ //
+ //            if (escTimer > 3)
+ //            {
+ //                escText.DOColor(new Color(1, 1, 1, 0), .5f);
+ //                escTextImage.DOColor(new Color(56 / 255f, 56 / 255f, 56 / 255f, 0), .5f);
+ //                escTimer = 0;
+ //                escTimerStart = false;
+ //            }
+ //        }
+ //    }
+ //
+    public void SceneLoad(string stage)
 	{
-		// ½ºÅ×ÀÌÁö 1 ½ÃÀÛ
-		StartCoroutine(FadeOut("Scenes/Stage1"));
+		StartCoroutine(FadeOut(stage));
     }
 
-    public void OnClickExitButton()
+    public void ExitGame()
     {
-        ExitGame();
+	    StartCoroutine(Exit());
     }
-
-    public void OnClickHelpButton()
-    {
-        screenOn = true;
-        if (userIsFool)
-        {
-            // stage select
-            screen_StageSelect.SetActive(true);
-        }
-        else
-        {
-            // ³ª´Â ¹Ùº¸´Ù ÀÔ·ÂÃ¢
-            screen_Help.SetActive(true);
-        }
-
-    }
-
-    public void OnClickDoneButton()
-    {
-        if (inputField.text == "³ª´Â °ÔÀÓÀ» ±²ÀåÈ÷ ¸ø ÇÕ´Ï´Ù.")
-        //if (inputField.text == "I'm really bad at this game.")
-            {
-            userIsFool = true;
-            screen_Help.SetActive(false);
-            // ½ºÅ×ÀÌÁö ¼±ÅÃ Ã¢
-            screen_StageSelect.SetActive(true);
-        }
-        else
-        {
-            // "Æ²·È½À´Ï´Ù!"
-
-        }
-    }
-
-    public void OnClickStage1Button()
-    {
-        StartCoroutine(FadeOut("Scenes/Stage1"));
-    }
-
-    public void OnClickStage2Button()
-    {
-        StartCoroutine(FadeOut("Scenes/Stage2"));
-    }
-
-    public void OnClickStage3Button()
-    {
-        StartCoroutine(FadeOut("Scenes/Stage3"));
-    }
-
-    public void OnClickStage4Button()
-    {
-        StartCoroutine(FadeOut("Scenes/Stage4"));
-    }
-
-    public void OnClickCloseButton()
-    {
-        screen_Help.SetActive(false);
-        screen_StageSelect.SetActive(false);
-        //input field ÃÊ±âÈ­
-        inputField.text = string.Empty;
-    }
+ //
+ //    public void OnClickExitButton()
+ //    {
+ //        ExitGame();
+ //    }
+ //
+ //    public void OnClickHelpButton()
+ //    {
+ //        screenOn = true;
+ //        if (userIsFool)
+ //        {
+ //            // stage select
+ //            screen_StageSelect.SetActive(true);
+ //        }
+ //        else
+ //        {
+ //            // ë‚˜ëŠ” ë°”ë³´ë‹¤ ì…ë ¥ì°½
+ //            screen_Help.SetActive(true);
+ //        }
+ //
+ //    }
+ //
+ //    public void OnClickDoneButton()
+ //    {
+ //        if (inputField.text == "ë‚˜ëŠ” ê²Œì„ì„ êµ‰ì¥íˆ ëª» í•©ë‹ˆë‹¤.")
+ //        //if (inputField.text == "I'm really bad at this game.")
+ //            {
+ //            userIsFool = true;
+ //            screen_Help.SetActive(false);
+ //            // ìŠ¤í…Œì´ì§€ ì„ íƒ ì°½
+ //            screen_StageSelect.SetActive(true);
+ //        }
+ //        else
+ //        {
+ //            // "í‹€ë ¸ìŠµë‹ˆë‹¤!"
+ //
+ //        }
+ //    }
+ //
+ //    public void OnClickStage1Button()
+ //    {
+ //        StartCoroutine(FadeOut("Scenes/Stage1"));
+ //    }
+ //
+ //    public void OnClickStage2Button()
+ //    {
+ //        StartCoroutine(FadeOut("Scenes/Stage2"));
+ //    }
+ //
+ //    public void OnClickStage3Button()
+ //    {
+ //        StartCoroutine(FadeOut("Scenes/Stage3"));
+ //    }
+ //
+ //    public void OnClickStage4Button()
+ //    {
+ //        StartCoroutine(FadeOut("Scenes/Stage4"));
+ //    }
+ //
+ //    public void OnClickCloseButton()
+ //    {
+ //        screen_Help.SetActive(false);
+ //        screen_StageSelect.SetActive(false);
+ //        //input field ì´ˆê¸°í™”
+ //        inputField.text = string.Empty;
+ //    }
 
 	IEnumerator FadeOut(string stage)
 	{
@@ -168,5 +194,30 @@ public class MenuManager : MonoBehaviour
 		yield return new WaitForSeconds(.5f);
 
 		SceneManager.LoadScene(stage);
+	}
+
+	IEnumerator Exit()
+	{
+		for (int i = 0; i <= 16; i++)
+		{
+			fadeOut.DOLocalMoveX(128, 0).SetRelative();
+			yield return new WaitForSeconds(.05f);
+		}
+		yield return new WaitForSeconds(.5f);
+		
+#if UNITY_EDITOR
+		UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
+	}
+	
+	public void MenuAppear(Transform menu)
+	{
+		menu.DOMoveX(1000, .5f);
+	}
+	public void MenuDisappear(Transform menu)
+	{
+		menu.DOMoveX(-1000, .5f);
 	}
 }
