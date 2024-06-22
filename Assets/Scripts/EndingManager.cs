@@ -20,7 +20,8 @@ public class EndingManager : MonoBehaviour
 	[SerializeField] ParticleSystem watering;
 
 	[SerializeField] GameObject flower;
-	[SerializeField] TextMeshProUGUI title;
+	// [SerializeField] TextMeshProUGUI title;
+	[SerializeField] GameObject credit;
 
 	[SerializeField] GameManager gameManager;
 
@@ -74,7 +75,8 @@ public class EndingManager : MonoBehaviour
 	{
 		p2.DOScaleX(-1, 0);
 		playerManager.isFollowing = false;
-		Camera.main.DOOrthoSize(5, 5);
+		yield return new WaitForSeconds(.5f);
+		Camera.main.DOOrthoSize(5, 4.5f);
 		yield return new WaitForSeconds(1);
 		watering.Play();
 		yield return new WaitForSeconds(5);
@@ -83,13 +85,11 @@ public class EndingManager : MonoBehaviour
 		Camera.main.transform.DOMoveY(10, 5).SetEase(Ease.Linear).SetRelative();
 
 		yield return new WaitForSeconds(7);
-		title.DOColor(new Color(1, 1, 1, 0), 2);
-		yield return new WaitForSeconds(2);
-		title.text = "wooslee\nyuna";
-		title.DOColor(new Color(1, 1, 1, 1), 2);
-		yield return new WaitForSeconds(4);
-		title.DOColor(new Color(1, 1, 1, 0), 2);
-		yield return new WaitForSeconds(2);
-		gameManager.StageClear("Scenes/Menu");
+		credit.SetActive(true);
+		credit.transform.parent.DOLocalMoveY(1080, 20).SetEase(Ease.Linear);
+		yield return new WaitForSeconds(23);
+		BoolManager boolManager = GameObject.Find("BoolManager").GetComponent<BoolManager>();
+		boolManager.isFinished = true;
+		gameManager.StageClear("Scenes/MainMenu");
 	}
 }

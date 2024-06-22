@@ -36,7 +36,7 @@ public class GameManager : MonoBehaviour
             {
 				escText.gameObject.SetActive(false);
 				escTextImage.gameObject.SetActive(false);
-                StartCoroutine(FadeOut("Scenes/Menu"));
+                StartCoroutine(FadeOut("Scenes/MainMenu"));
 			}
 			else
             {
